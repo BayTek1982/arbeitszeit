@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bayazit Arbeitszeit</title>
+<meta name="theme-color" content="#0f1720">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Arbeitszeit">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1720; --panel:#17212c; --panel2:#1e2a37; --line:#2a3846;
+  --text:#eef3f7; --muted:#8fa1b3; --green:#2fbf71; --green2:#24a05e;
+  --red:#e5484d; --red2:#c93a3f; --amber:#f2b33d; --blue:#4ea1ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Manrope,system-ui,sans-serif}
+body{min-height:100vh}
+.wrap{max-width:560px;margin:0 auto;padding:16px 14px 90px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+header h1{font:700 16px 'JetBrains Mono',monospace;margin:0;letter-spacing:.5px;text-transform:uppercase}
+header h1 span{color:var(--green)}
+.store{font-size:11px;color:var(--muted);text-align:right;max-width:55%}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:#0b1118ee;backdrop-filter:blur(8px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:5}
+.tabs .in{display:flex;max-width:560px;width:100%}
+.tabs button{flex:1;background:none;border:0;color:var(--muted);font:600 13px Manrope,sans-serif;padding:12px 4px 14px;cursor:pointer}
+.tabs button b{display:block;font-size:19px;margin-bottom:2px}
+.tabs button.on{color:var(--green)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.clock{text-align:center;padding:18px 10px 20px}
+.clock .t{font:700 46px 'JetBrains Mono',monospace;letter-spacing:1px}
+.clock .d{color:var(--muted);margin-top:2px;font-size:14px}
+.pill{display:inline-block;margin-top:12px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700}
+.pill.in{background:#2fbf7122;color:var(--green)}
+.pill.out{background:#8fa1b322;color:var(--muted)}
+.stamp{display:block;width:210px;height:210px;margin:18px auto 6px;border-radius:50%;border:0;color:#fff;font:800 30px Manrope,sans-serif;cursor:pointer;box-shadow:0 10px 40px #0007;transition:transform .08s}
+.stamp:active{transform:scale(.96)}
+.stamp small{display:block;font-size:13px;font-weight:600;opacity:.85;margin-top:6px}
+.stamp.kommen{background:radial-gradient(circle at 35% 30%,#45d98a,var(--green2))}
+.stamp.gehen{background:radial-gradient(circle at 35% 30%,#f2676b,var(--red2))}
+.stamp:disabled{opacity:.6}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--panel2);border-radius:12px;padding:10px 12px;border-left:3px solid var(--acc,var(--green))}
+.grid .kpi:nth-child(2),.sum .kpi:nth-child(2){--acc:var(--amber)}
+.grid .kpi:nth-child(3),.sum .kpi:nth-child(3){--acc:var(--blue)}
+.grid .kpi:nth-child(4){--acc:#b9a3ff}
+.kpi .l{text-transform:uppercase;letter-spacing:1px;font-family:'JetBrains Mono',monospace;font-size:10.5px!important}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi .v{font:700 22px 'JetBrains Mono',monospace;margin-top:3px}
+.pos{color:var(--green)} .neg{color:var(--red)} .amb{color:var(--amber)}
+h2{font:700 12px 'JetBrains Mono',monospace;letter-spacing:1.6px;text-transform:uppercase;color:var(--green);margin:0 0 10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row:last-child{border-bottom:0}
+.mono{font-family:'JetBrains Mono',monospace}
+.muted{color:var(--muted)}
+.btn{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font:700 14px Manrope,sans-serif;cursor:pointer}
+.btn.pri{background:var(--green2);border-color:var(--green2)}
+.btn.dan{background:transparent;color:var(--red);border-color:#e5484d66}
+.btn.sm{padding:6px 10px;font-size:13px}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.nav .title{font-weight:800;font-size:16px;text-align:center}
+.day{display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.day:last-child{border-bottom:0}
+.day.today{background:#2fbf7112;border-radius:10px}
+.day .dn{font-weight:800;font-size:14px;line-height:1.15}
+.day .dn small{display:block;color:var(--muted);font-weight:600;font-size:12px}
+.day .mid{font-size:13px;min-width:0}
+.day .mid .times{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:6px;background:var(--line);border-radius:4px;margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--green);border-radius:4px}
+.day .rt{text-align:right;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.3}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;margin-right:4px}
+.tag.urlaub{background:#4ea1ff22;color:var(--blue)}
+.tag.krank{background:#e5484d22;color:var(--red)}
+.tag.feiertag{background:#f2b33d22;color:var(--amber)}
+.tag.gleitzeit{background:#a78bfa22;color:#b9a3ff}
+.tag.offen{background:#2fbf7122;color:var(--green)}
+.weekend .dn{color:var(--muted)}
+label.f{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
+input,select,textarea{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;font:600 15px Manrope,sans-serif}
+input[type=time]{font-family:'JetBrains Mono',monospace}
+.days7{display:flex;gap:6px}
+.days7 label{flex:1;text-align:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 0;font-weight:700;font-size:13px;cursor:pointer}
+.days7 label.on{background:var(--green2);border-color:var(--green2)}
+.days7 input{display:none}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0}
+.switch input{width:auto;transform:scale(1.4)}
+.hint{font-size:12px;color:var(--muted);line-height:1.45;margin-top:6px}
+.modal{position:fixed;inset:0;background:#000a;display:none;align-items:flex-end;justify-content:center;z-index:10}
+.modal.show{display:flex}
+.sheet{background:var(--panel);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px 16px 26px;max-height:90vh;overflow:auto;border:1px solid var(--line)}
+.pair{display:grid;grid-template-columns:1fr 1fr 40px;gap:8px;margin-bottom:8px;align-items:center}
+.pair button{height:42px}
+.acts{display:flex;gap:8px;margin-top:16px}
+.acts .btn{flex:1}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#24303d;border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:700;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20}
+.toast.show{opacity:1}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.sum .kpi .v{font-size:17px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>⏱️ Bayazit <span>Arbeitszeit</span></h1>
+    <div class="store" id="store">Lade …</div>
+  </header>
+  <main id="main"></main>
+</div>
+<nav class="tabs"><div class="in">
+  <button data-t="heute" class="on"><b>🕘</b>Heute</button>
+  <button data-t="woche"><b>📅</b>Woche</button>
+  <button data-t="monat"><b>🗓️</b>Monat</button>
+  <button data-t="einst"><b>⚙️</b>Einstellungen</button>
+</div></nav>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- Hilfsfunktionen ---------- */
+const pad=n=>String(n).padStart(2,'0');
+const dKey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseKey=k=>{const[y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)};
+const mKeyOf=k=>'m'+k.slice(0,7);
+const toMin=t=>{const[h,m]=String(t).split(':').map(Number);return h*60+m};
+const hhmm=d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const minToClock=m=>{m=((m%1440)+1440)%1440;return `${pad(Math.floor(m/60))}:${pad(m%60)}`};
+const fmt=m=>{m=Math.round(m);const s=m<0?'−':'';m=Math.abs(m);return `${s}${Math.floor(m/60)}:${pad(m%60)}`};
+const fmtS=m=>(Math.round(m)>0?'+':'')+fmt(m);
+const cls=m=>Math.round(m)>0?'pos':Math.round(m)<0?'neg':'';
+const WT=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const WK=['So','Mo','Di','Mi','Do','Fr','Sa'];
+const MON=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const TYPEN={'':'Arbeit',urlaub:'Urlaub',krank:'Krank',gleitzeit:'Gleitzeittag (Überstundenabbau)',feiertag:'Feiertag'};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2200)}
+
+/* ---------- Feiertage Bayern ---------- */
+function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da)}
+const holCache={};
+function holidays(y){
+  if(holCache[y])return holCache[y];
+  const o={},fix=(m,d,n)=>o[dKey(new Date(y,m-1,d))]=n,e=easter(y),off=(n,name)=>o[dKey(addDays(e,n))]=name;
+  fix(1,1,'Neujahr');fix(1,6,'Heilige Drei Könige');fix(5,1,'Tag der Arbeit');fix(8,15,'Mariä Himmelfahrt');
+  fix(10,3,'Tag der Deutschen Einheit');fix(11,1,'Allerheiligen');fix(12,25,'1. Weihnachtstag');fix(12,26,'2. Weihnachtstag');
+  off(-2,'Karfreitag');off(1,'Ostermontag');off(39,'Christi Himmelfahrt');off(50,'Pfingstmontag');off(60,'Fronleichnam');
+  return holCache[y]=o;
+}
+const holidayName=k=>S.settings.feiertage!==false?holidays(+k.slice(0,4))[k]:null;
+
+/* ---------- Zustand ---------- */
+const DEFAULTS={woche:35,tage:[1,2,3,4,5],autoPause:true,feiertage:true,start:'',uebertrag:0};
+const S={settings:{...DEFAULTS},months:{}};
+let tab='heute',weekOff=0,monthOff=0;
+let db=null,base=null,mode='local';
+const queues={};
+
+function getDay(k){const m=S.months[mKeyOf(k)];return (m&&m.days&&m.days[k.slice(8)])||null}
+function ensureDay(k){const mk=mKeyOf(k);if(!S.months[mk])S.months[mk]={days:{}};if(!S.months[mk].days)S.months[mk].days={};const dd=k.slice(8);if(!S.months[mk].days[dd])S.months[mk].days[dd]={e:[]};const d=S.months[mk].days[dd];if(!d.e)d.e=[];return d}
+function cleanDay(k){const d=getDay(k);if(d&&(!d.e||!d.e.length)&&!d.typ&&!d.notiz)delete S.months[mKeyOf(k)].days[k.slice(8)]}
+
+/* ---------- Speichern ---------- */
+function saveLocal(){try{localStorage.setItem('bayazit-arbeitszeit',JSON.stringify({settings:S.settings,months:S.months}))}catch(e){}}
+function loadLocal(){try{const j=JSON.parse(localStorage.getItem('bayazit-arbeitszeit')||'null');if(j){S.settings={...DEFAULTS,...j.settings};S.months=j.months||{}}}catch(e){}}
+function writeDoc(id,body){
+  const copy=JSON.parse(JSON.stringify(body));
+  queues[id]=(queues[id]||Promise.resolve()).then(()=>db.collection(base).doc(id).set(copy)).catch(e=>{
+    if(e&&e.code==='quota_exceeded')toast('Speicher voll – bitte alte Monate exportieren');
+    else toast('Speichern fehlgeschlagen – bitte erneut versuchen');
+  });
+}
+function persistMonth(mk){saveLocal();if(mode==='db')writeDoc(mk,S.months[mk]||{days:{}})}
+function persistSettings(){saveLocal();if(mode==='db')writeDoc('settings',S.settings)}
+
+/* ---------- Berechnung ---------- */
+function minsSince(k){return Math.floor((Date.now()-parseKey(k).getTime())/60000)}
+function sollMin(k){
+  const s=S.settings,wd=parseKey(k).getDay();
+  if(!s.tage.includes(wd)||!s.tage.length)return 0;
+  if(holidayName(k))return 0;
+  const d=getDay(k);if(d&&['urlaub','krank','feiertag'].includes(d.typ))return 0;
+  return Math.round(s.woche*60/s.tage.length);
+}
+function pauseNeed(b){return b>540?45:b>360?30:0}
+function calc(k){
+  const day=getDay(k),r={brutto:0,pause:0,abzug:0,netto:0,open:false,soll:sollMin(k),gaps:0};
+  if(day&&day.e&&day.e.length){
+    const bl=[];
+    for(const [a,b] of day.e){if(!a)continue;const s=toMin(a);let e;
+      if(b){e=toMin(b);if(e<s)e+=1440}else{r.open=true;e=Math.max(s,minsSince(k))}
+      bl.push([s,e])}
+    bl.sort((x,y)=>x[0]-y[0]);
+    for(let i=0;i<bl.length;i++){r.brutto+=bl[i][1]-bl[i][0];if(i>0)r.gaps+=Math.max(0,bl[i][0]-bl[i-1][1])}
+    r.abzug=S.settings.autoPause?Math.max(0,pauseNeed(r.brutto)-r.gaps):0;
+    r.pause=r.gaps+r.abzug;r.netto=r.brutto-r.abzug;
+  }
+  r.diff=r.netto-r.soll;return r;
+}
+function firstKey(){
+  if(S.settings.start)return S.settings.start;
+  let min=null;for(const mk in S.months){const m=S.months[mk];if(!m||!m.days)continue;for(const dd in m.days){const k=mk.slice(1)+'-'+dd;if(!min||k<min)min=k}}
+  return min||dKey(new Date());
+}
+function saldoBisGestern(){
+  let m=Math.round(+S.settings.uebertrag||0);const today=parseKey(dKey(new Date()));
+  for(let d=parseKey(firstKey());d<today;d=addDays(d,1))m+=calc(dKey(d)).diff;
+  return m;
+}
+function findOpen(){
+  for(let i=0;i<3;i++){const k=dKey(addDays(new Date(),-i)),d=getDay(k);if(!d||!d.e)continue;const idx=d.e.findIndex(p=>p[0]&&!p[1]);if(idx>=0)return {k,idx}}
+  return null;
+}
+function feierabend(k){
+  const r=calc(k);if(!r.open)return null;const rest=r.soll-r.netto;if(rest<=0)return null;
+  let add=rest;for(let i=0;i<4;i++){const b=r.brutto+add,ab=S.settings.autoPause?Math.max(0,pauseNeed(b)-r.gaps):0;const net=b-ab;if(net>=r.soll)break;add+=r.soll-net}
+  return new Date(Date.now()+add*60000);
+}
+
+/* ---------- Stempeln ---------- */
+let busy=false;
+function stempeln(){
+  if(busy)return;busy=true;setTimeout(()=>busy=false,1500);
+  const now=new Date(),o=findOpen();
+  if(o){const d=getDay(o.k);d.e[o.idx]=[d.e[o.idx][0],hhmm(now)];persistMonth(mKeyOf(o.k));toast('👋 Gehen gestempelt: '+hhmm(now))}
+  else{const k=dKey(now),d=ensureDay(k);d.e.push([hhmm(now),null]);persistMonth(mKeyOf(k));toast('✅ Kommen gestempelt: '+hhmm(now))}
+  render();
+}
+
+/* ---------- Darstellung ---------- */
+function timesText(day){
+  if(!day||!day.e||!day.e.length)return '';
+  return day.e.map(p=>`${p[0]}–${p[1]||'…'}`).join(', ');
+}
+function tagsHtml(k,day){
+  let t='';const h=holidayName(k);
+  if(day&&day.typ)t+=`<span class="tag ${day.typ}">${day.typ==='gleitzeit'?'Gleitzeit':TYPEN[day.typ]}</span>`;
+  else if(h)t+=`<span class="tag feiertag">${esc(h)}</span>`;
+  if(day&&day.e&&day.e.some(p=>p[0]&&!p[1]))t+=`<span class="tag offen">läuft</span>`;
+  return t;
+}
+function render(){
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  const m=document.getElementById('main');
+  m.innerHTML=tab==='heute'?vHeute():tab==='woche'?vWoche():tab==='monat'?vMonat():vEinst();
+  bind();
+}
+function vHeute(){
+  const now=new Date(),k=dKey(now),o=findOpen(),kk=o?o.k:k,r=calc(kk),day=getDay(kk),fa=feierabend(kk),saldo=saldoBisGestern();
+  const since=o?getDay(o.k).e[o.idx][0]:null;
+  return `
+  <div class="card clock">
+    <div class="t" id="clk">${hhmm(now)}:${pad(now.getSeconds())}</div>
+    <div class="d">${WT[now.getDay()]}, ${now.getDate()}. ${MON[now.getMonth()]} ${now.getFullYear()}${holidayName(k)?' · '+esc(holidayName(k)):''}</div>
+    <div class="pill ${o?'in':'out'}">${o?'● Eingestempelt seit '+since+(o.k!==k?' (gestern)':''):'○ Nicht eingestempelt'}</div>
+    <button class="stamp ${o?'gehen':'kommen'}" id="stampBtn">${o?'GEHEN':'KOMMEN'}<small>${o?'ausstempeln':'einstempeln'}</small></button>
+  </div>
+  <div class="card">
+    <h2>${o&&o.k!==k?'Schicht von gestern':'Heute'}</h2>
+    <div class="grid">
+      <div class="kpi"><div class="l">Arbeitszeit (netto)</div><div class="v">${fmt(r.netto)}</div></div>
+      <div class="kpi"><div class="l">Pause</div><div class="v">${fmt(r.pause)}</div></div>
+      <div class="kpi"><div class="l">Soll</div><div class="v">${fmt(r.soll)}</div></div>
+      <div class="kpi"><div class="l">Differenz</div><div class="v ${cls(r.diff)}">${fmtS(r.diff)}</div></div>
+    </div>
+    ${fa?`<div class="row" style="margin-top:8px"><span>🏁 Soll erreicht um</span><b class="mono amb">${hhmm(fa)} Uhr</b></div>`:''}
+    ${r.abzug?`<div class="hint">Gesetzliche Pause: ${r.abzug} Min. automatisch abgezogen (ab 6 Std. 30 Min., ab 9 Std. 45 Min.).</div>`:''}
+  </div>
+  <div class="card">
+    <div class="row"><span>💼 Gleitzeitkonto (bis gestern)</span><b class="mono ${cls(saldo)}">${fmtS(saldo)}</b></div>
+    <div class="row"><span>📊 inkl. heute</span><b class="mono ${cls(saldo+r.diff)}">${fmtS(saldo+r.diff)}</b></div>
+  </div>
+  <div class="card">
+    <div class="nav" style="margin-bottom:4px"><h2 style="margin:0">Stempelungen</h2><button class="btn sm" data-edit="${kk}">✏️ Bearbeiten</button></div>
+    ${day&&day.e&&day.e.length?day.e.map(p=>`<div class="row"><span>➡️ Kommen <b class="mono">${p[0]}</b></span><span>Gehen <b class="mono">${p[1]||'…'}</b></span></div>`).join(''):'<div class="muted" style="font-size:14px">Noch keine Stempelung.</div>'}
+    ${day&&day.notiz?`<div class="hint">📝 ${esc(day.notiz)}</div>`:''}
+  </div>`;
+}
+function dayRow(k){
+  const d=parseKey(k),day=getDay(k),r=calc(k),isT=k===dKey(new Date()),future=k>dKey(new Date());
+  const pct=r.soll?Math.min(100,r.netto/r.soll*100):(r.netto?100:0);
+  const we=!S.settings.tage.includes(d.getDay());
+  return `<div class="day ${isT?'today':''} ${we?'weekend':''}" data-edit="${k}">
+    <div class="dn">${WK[d.getDay()]}<small>${pad(d.getDate())}.${pad(d.getMonth()+1)}.</small></div>
+    <div class="mid">${tagsHtml(k,day)}<div class="times muted">${esc(timesText(day))||(r.soll&&!future?'–':'')}</div>${r.soll||r.netto?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}</div>
+    <div class="rt">${r.netto||r.soll?fmt(r.netto):''}${(r.netto||r.soll)&&!future?`<br><span class="${cls(r.diff)}">${fmtS(r.diff)}</span>`:''}</div>
+  </div>`;
+}
+function vWoche(){
+  const t=new Date();const mon=addDays(t,-((t.getDay()+6)%7)+weekOff*7);mon.setHours(0,0,0,0);
+  const keys=[...Array(7)].map((_,i)=>dKey(addDays(mon,i)));const today=dKey(new Date());
+  let ist=0,soll=0,diff=0;keys.forEach(k=>{const r=calc(k);ist+=r.netto;soll+=r.soll;if(k<=today)diff+=r.diff});
+  const kw=isoWeek(mon);
+  return `<div class="nav"><button class="btn" id="prev">◀</button><div class="title">KW ${kw}<div class="muted" style="font-size:12px;font-weight:600">${fmtD(mon)} – ${fmtD(addDays(mon,6))}</div></div><button class="btn" id="next">▶</button></div>
+  <div class="sum"><div class="kpi"><div class="l">Ist</div><div class="v">${fmt(ist)}</div></div><div class="kpi"><div class="l">Soll</div><div class="v">${fmt(soll)}</div></div><div class="kpi"><div class="l">Differenz</div><div class="v ${cls(diff)}">${fmtS(diff)}</div></div></div>
+  <div class="card">${keys.map(dayRow).join('')}</div>
+  <div class="hint">Tipp: Auf einen Tag tippen, um Zeiten nachzutragen oder Urlaub/Krank einzutragen.</div>`;
+}
+function vMonat(){
+  const t=new Date(),first=new Date(t.getFullYear(),t.getMonth()+monthOff,1),y=first.getFullYear(),mo=first.getMonth();
+  const n=new Date(y,mo+1,0).getDate(),keys=[...Array(n)].map((_,i)=>dKey(new Date(y,mo,i+1))),today=dKey(new Date());
+  let ist=0,soll=0,diff=0,url=0,kr=0;
+  keys.forEach(k=>{const r=calc(k),d=getDay(k);ist+=r.netto;soll+=r.soll;if(k<=today)diff+=r.diff;if(d&&d.typ==='urlaub')url++;if(d&&d.typ==='krank')kr++});
+  return `<div class="nav"><button class="btn" id="prev">◀</button><div class="title">${MON[mo]} ${y}</div><button class="btn" id="next">▶</button></div>
+  <div class="sum"><div class="kpi"><div class="l">Ist</div><div class="v">${fmt(ist)}</div></div><div class="kpi"><div class="l">Soll</div><div class="v">${fmt(soll)}</div></div><div class="kpi"><div class="l">Differenz</div><div class="v ${cls(diff)}">${fmtS(diff)}</div></div></div>
+  <div class="card" style="padding:10px 14px"><div class="row"><span>🏖️ Urlaubstage</span><b>${url}</b></div><div class="row"><span>🤒 Krankheitstage</span><b>${kr}</b></div></div>
+  <div class="card">${keys.map(dayRow).join('')}</div>
+  <button class="btn" id="exp" style="width:100%">📄 Monat als Tabelle exportieren (CSV für Excel)</button>`;
+}
+function vEinst(){
+  const s=S.settings;
+  const u=Math.round(+s.uebertrag||0);
+  return `<div class="card"><h2>Arbeitszeit</h2>
+    <label class="f">Wochenstunden (Soll)</label><input type="number" id="woche" step="0.25" min="0" max="60" value="${s.woche}">
+    <div class="hint">Das sind ${fmt(s.tage.length?s.woche*60/s.tage.length:0)} Std. pro Arbeitstag.</div>
+    <label class="f">Arbeitstage</label>
+    <div class="days7">${[1,2,3,4,5,6,0].map(d=>`<label class="${s.tage.includes(d)?'on':''}"><input type="checkbox" data-wd="${d}" ${s.tage.includes(d)?'checked':''}>${WK[d]}</label>`).join('')}</div>
+    <div class="switch"><span>Gesetzliche Pause automatisch abziehen<div class="hint" style="margin:2px 0 0">30 Min. ab 6 Std., 45 Min. ab 9 Std. – eigene Ausstempel-Pausen werden angerechnet</div></span><input type="checkbox" id="autoPause" ${s.autoPause?'checked':''}></div>
+    <div class="switch"><span>Feiertage Bayern berücksichtigen</span><input type="checkbox" id="feiertage" ${s.feiertage!==false?'checked':''}></div>
+  </div>
+  <div class="card"><h2>Gleitzeitkonto</h2>
+    <label class="f">Zählen ab Datum</label><input type="date" id="start" value="${s.start||firstKey()}">
+    <label class="f">Übertrag (Stand zu diesem Datum, z. B. 12:30 oder -3:15)</label><input type="text" id="uebertrag" inputmode="text" value="${u<0?'-':''}${Math.floor(Math.abs(u)/60)}:${pad(Math.abs(u)%60)}">
+  </div>
+  <div class="card"><h2>Datensicherung</h2>
+    <div class="hint" style="font-size:13px;margin-bottom:10px">Sichere alle Stempelungen als Datei – z. B. um sie aufs neue Handy mitzunehmen.</div>
+    <div class="acts" style="margin-top:0"><button class="btn" id="bkOut">💾 Sicherung speichern</button><label class="btn" style="text-align:center">📂 Sicherung laden<input type="file" id="bkIn" accept=".json,application/json" style="display:none"></label></div>
+  </div>
+  <div class="card"><h2>Speicherort</h2><div class="hint" style="font-size:13px">${mode==='db'?'☁️ Deine Stempelungen werden privat in deinem Claude-Konto gespeichert – nur du siehst sie, auf Handy und PC gleich.':'📱 Speicherung nur auf diesem Gerät. Öffne die App angemeldet in Claude, damit die Daten in deinem Konto gesichert werden.'}</div></div>`;
+}
+function fmtD(d){return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.`}
+function isoWeek(d){const t=new Date(d);t.setHours(0,0,0,0);t.setDate(t.getDate()+3-(t.getDay()+6)%7);const w1=new Date(t.getFullYear(),0,4);return 1+Math.round(((t-w1)/864e5-3+(w1.getDay()+6)%7)/7)}
+
+function bind(){
+  const q=id=>document.getElementById(id);
+  q('stampBtn')&&(q('stampBtn').onclick=stempeln);
+  document.querySelectorAll('[data-edit]').forEach(e=>e.onclick=()=>openEdit(e.dataset.edit));
+  q('prev')&&(q('prev').onclick=()=>{tab==='woche'?weekOff--:monthOff--;render()});
+  q('next')&&(q('next').onclick=()=>{tab==='woche'?weekOff++:monthOff++;render()});
+  q('exp')&&(q('exp').onclick=exportCSV);
+  if(tab==='einst'){
+    q('woche').onchange=e=>{const v=parseFloat(String(e.target.value).replace(',','.'));if(!isNaN(v)&&v>=0){S.settings.woche=v;persistSettings();render()}};
+    document.querySelectorAll('[data-wd]').forEach(c=>c.onchange=()=>{const wd=+c.dataset.wd;S.settings.tage=c.checked?[...new Set([...S.settings.tage,wd])]:S.settings.tage.filter(x=>x!==wd);persistSettings();render()});
+    q('autoPause').onchange=e=>{S.settings.autoPause=e.target.checked;persistSettings()};
+    q('feiertage').onchange=e=>{S.settings.feiertage=e.target.checked;persistSettings()};
+    q('bkOut').onclick=()=>saveFile(`Arbeitszeit_Sicherung_${dKey(new Date())}.json`,JSON.stringify({app:'bayazit-arbeitszeit',v:1,settings:S.settings,months:S.months}),'application/json');
+    q('bkIn').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text());if(!j||j.app!=='bayazit-arbeitszeit'||!j.months)throw 0;
+      for(const mk in j.months){if(!/^m\d{4}-\d{2}$/.test(mk))continue;const cur=S.months[mk]||{days:{}};S.months[mk]={days:{...(cur.days||{}),...(j.months[mk].days||{})}};persistMonth(mk)}
+      if(j.settings){S.settings={...DEFAULTS,...j.settings};persistSettings()}render();toast('✅ Sicherung geladen')}catch(err){toast('Datei ist keine gültige Sicherung')}};
+    q('start').onchange=e=>{if(e.target.value){S.settings.start=e.target.value;persistSettings();toast('Gespeichert')}};
+    q('uebertrag').onchange=e=>{const v=String(e.target.value).trim().replace(',','.');const m=v.match(/^([+\-−]?)(\d+)(?::(\d{1,2}))?$/);
+      if(!m){toast('Bitte so eingeben: 12:30 oder -3:15');return}
+      let min=(+m[2])*60+(+(m[3]||0));if(m[1]==='-'||m[1]==='−')min=-min;S.settings.uebertrag=min;persistSettings();toast('Übertrag gespeichert')};
+  }
+}
+
+/* ---------- Tag bearbeiten ---------- */
+let edK=null,edPairs=[];
+function openEdit(k){
+  edK=k;const d=getDay(k)||{e:[]};edPairs=(d.e||[]).map(p=>[p[0]||'',p[1]||'']);
+  if(!edPairs.length)edPairs.push(['','']);
+  drawEdit(d.typ||'',d.notiz||'');document.getElementById('modal').classList.add('show');
+}
+function drawEdit(typ,notiz){
+  const dt=parseKey(edK),h=holidayName(edK);
+  document.getElementById('sheet').innerHTML=`
+   <h2>${WT[dt.getDay()]}, ${dt.getDate()}. ${MON[dt.getMonth()]} ${dt.getFullYear()}${h?' · '+esc(h):''}</h2>
+   <label class="f">Art des Tages</label>
+   <select id="edTyp">${Object.entries(TYPEN).map(([v,l])=>`<option value="${v}" ${v===typ?'selected':''}>${l}</option>`).join('')}</select>
+   <label class="f">Zeiten (Kommen / Gehen) – Gehen leer lassen, wenn du noch da bist</label>
+   <div id="pairs">${edPairs.map((p,i)=>`<div class="pair"><input type="time" data-i="${i}" data-j="0" value="${p[0]}"><input type="time" data-i="${i}" data-j="1" value="${p[1]}"><button class="btn dan sm" data-del="${i}">✕</button></div>`).join('')}</div>
+   <button class="btn sm" id="addPair">＋ Zeitpaar hinzufügen</button>
+   <div class="hint">Mehrere Zeitpaare = Pause dazwischen. Gehen früher als Kommen = Nachtschicht über Mitternacht.</div>
+   <label class="f">Notiz</label><input type="text" id="edNotiz" value="${esc(notiz)}" placeholder="z. B. Spätschicht, Überstunden angeordnet …">
+   <div class="acts"><button class="btn" id="edCancel">Abbrechen</button><button class="btn pri" id="edSave">Speichern</button></div>
+   <button class="btn dan" id="edClear" style="width:100%;margin-top:10px">🗑️ Tag leeren</button>`;
+  const sync=()=>document.querySelectorAll('#pairs input').forEach(inp=>edPairs[+inp.dataset.i][+inp.dataset.j]=inp.value);
+  const cur=()=>[document.getElementById('edTyp').value,document.getElementById('edNotiz').value];
+  document.getElementById('addPair').onclick=()=>{sync();edPairs.push(['','']);drawEdit(...cur())};
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{sync();edPairs.splice(+b.dataset.del,1);drawEdit(...cur())});
+  document.getElementById('edCancel').onclick=closeEdit;
+  document.getElementById('edClear').onclick=()=>{const mk=mKeyOf(edK);if(S.months[mk]&&S.months[mk].days)delete S.months[mk].days[edK.slice(8)];persistMonth(mk);closeEdit();render();toast('Tag geleert')};
+  document.getElementById('edSave').onclick=()=>{
+    sync();const [t,n]=cur();
+    const pairs=edPairs.filter(p=>p[0]||p[1]);
+    if(pairs.some(p=>!p[0])){toast('Bitte bei jedem Paar eine Kommen-Zeit eintragen');return}
+    if(pairs.filter(p=>!p[1]).length>1){toast('Nur ein offenes Zeitpaar (ohne Gehen) erlaubt');return}
+    const d=ensureDay(edK);d.e=pairs.map(p=>[p[0],p[1]||null]);
+    if(t)d.typ=t;else delete d.typ;
+    if(n.trim())d.notiz=n.trim();else delete d.notiz;
+    cleanDay(edK);persistMonth(mKeyOf(edK));closeEdit();render();toast('Gespeichert');
+  };
+}
+function closeEdit(){document.getElementById('modal').classList.remove('show')}
+document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeEdit()};
+
+/* ---------- Export ---------- */
+async function saveFile(fname,data,mime){
+  let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null}catch(e){}
+  if(dl){try{await dl.save({filename:fname,data});toast('📄 '+fname+' gespeichert')}catch(e){toast('Download abgebrochen')}return true}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:mime}));a.download=fname;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);toast('📄 '+fname+' gespeichert');return true}catch(e){return false}
+}
+async function exportCSV(){
+  const t=new Date(),first=new Date(t.getFullYear(),t.getMonth()+monthOff,1),y=first.getFullYear(),mo=first.getMonth(),n=new Date(y,mo+1,0).getDate();
+  const rows=[['Datum','Wochentag','Art','Zeiten','Brutto','Pause','Netto','Soll','Differenz','Notiz']];
+  let ist=0,soll=0,diff=0;
+  for(let i=1;i<=n;i++){const k=dKey(new Date(y,mo,i)),d=getDay(k),r=calc(k),dt=parseKey(k);
+    ist+=r.netto;soll+=r.soll;diff+=r.diff;
+    rows.push([`${pad(i)}.${pad(mo+1)}.${y}`,WT[dt.getDay()],d&&d.typ?TYPEN[d.typ]:(holidayName(k)||''),timesText(d),fmt(r.brutto),fmt(r.pause),fmt(r.netto),fmt(r.soll),fmtS(r.diff),d&&d.notiz||''])}
+  rows.push(['Summe','','','','','',fmt(ist),fmt(soll),fmtS(diff),'']);
+  const csv='﻿'+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  const fname=`Arbeitszeit_${y}-${pad(mo+1)}.csv`;
+  if(await saveFile(fname,csv,'text/csv;charset=utf-8'))return;
+  try{await navigator.clipboard.writeText(csv);toast('Tabelle kopiert – in Excel einfügen')}catch(e){toast('Export hier nicht möglich')}
+}
+
+/* ---------- Start ---------- */
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;weekOff=0;monthOff=0;render()});
+function setStore(){document.getElementById('store').textContent=mode==='db'?'☁️ privat in deinem Konto gespeichert':'📱 nur auf diesem Gerät gespeichert'}
+loadLocal();render();setStore();
+setInterval(()=>{const c=document.getElementById('clk');const n=new Date();if(c)c.textContent=`${hhmm(n)}:${pad(n.getSeconds())}`;if(n.getSeconds()===0&&!document.getElementById('modal').classList.contains('show'))render()},1000);
+
+(async()=>{
+  if(!window.claude||!window.claude.use){setStore();return}
+  try{
+    const [d,u]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+    const uid=u&&u.id?await u.id():null;
+    if(!d||!uid){setStore();return}
+    db=d;base='data/users/'+uid;
+    const timer=setTimeout(()=>{document.getElementById('store').textContent='⚠️ Verbindung langsam – Daten evtl. nicht aktuell'},10000);
+    let first=true;
+    db.collection(base).onSnapshot(snap=>{
+      if(!snap.metadata.fromCache)clearTimeout(timer);
+      if(first&&!snap.metadata.fromCache){
+        first=false;
+        if(snap.empty&&Object.keys(S.months).length){ // lokale Daten ins Konto übernehmen
+          mode='db';for(const mk in S.months)writeDoc(mk,S.months[mk]);writeDoc('settings',S.settings);setStore();render();return}
+      }
+      mode='db';
+      const months={};let settings=null;
+      snap.docs.forEach(doc=>{const v=JSON.parse(JSON.stringify(doc.data()||{}));if(doc.id==='settings')settings=v;else if(doc.id.startsWith('m'))months[doc.id]=v});
+      S.months=months;if(settings)S.settings={...DEFAULTS,...settings};
+      saveLocal();setStore();
+      if(!document.getElementById('modal').classList.contains('show'))render();
+    },err=>{clearTimeout(timer);mode='local';setStore()});
+  }catch(e){setStore()}
+})();
+if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+</script>
+</body>
+</html>
